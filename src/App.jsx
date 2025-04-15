@@ -66,8 +66,8 @@ export default function App() {
       </div>
 
       {/* Modal with animation */}
-      <AnimatePresence>
-  {selectedLetter && (
+<AnimatePresence>
+  {showModal && (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -78,19 +78,22 @@ export default function App() {
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 40, opacity: 0 }}
-        transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
+        transition={{ type: "spring", bounce: 0.25, duration: 0.4 }}
         className="bg-white p-6 rounded-xl shadow-lg w-full max-w-xl relative"
       >
         <button
-          onClick={() => setSelectedLetter(null)}
+          onClick={() => setShowModal(false)}
           className="absolute top-2 right-2 text-gray-500 hover:text-black text-xl"
         >
           &times;
         </button>
-        <h2 className="text-xl font-semibold text-purple-700 mb-2">
-          {selectedLetter.name} — {selectedLetter.location}
-        </h2>
-        <p className="text-gray-800 italic">{selectedLetter.content}</p>
+
+        <LetterForm
+          onSubmit={async (newLetter) => {
+            await handleSubmit(newLetter);
+            setShowModal(false);
+          }}
+        />
       </motion.div>
     </motion.div>
   )}
