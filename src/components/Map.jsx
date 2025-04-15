@@ -10,9 +10,28 @@ export default function Map({ letters = [], setSelectedLetter }) {
   const center = { lng: 11.5761, lat: 48.1372 }; // Munich
   const zoom = 2;
 
+  const getIconForMood = (mood) => {
+    switch (mood) {
+      case "☀️ Happy":
+        return "/icons/happy.png"
+      case "🌧 Sad":
+        return "/icons/sad.png"
+      case "⛈️ Angry":
+        return "/icons/angry.png"
+      case "🌥 Reflective":
+        return "/icons/reflective.png"
+      case "🌈 Hopeful":
+        return "/icons/hopeful.png"
+      default:
+        return "/icons/happy.png"
+    }
+  }
+
   maptilersdk.config.apiKey = "aZSUGRkgiMfTxwGUazYR"; // Replace with your actual key
 
   useEffect(() => {
+
+    
     if (map.current) return;
 
     map.current = new maptilersdk.Map({
@@ -27,24 +46,33 @@ export default function Map({ letters = [], setSelectedLetter }) {
     if (!map.current) return;
 
     letters
-      .filter((l) => l.coords?.lat && l.coords?.lng)
-      .forEach((l) => {
-        const marker = new maptilersdk.Marker({ color: "#6D28D9" })
-          .setLngLat([l.coords.lng, l.coords.lat])
-          .addTo(map.current);
+        .filter((l) => l.coords?.lat && l.coords?.lng)
+        .forEach((l) => {
+            const iconUrl = getIconForMood(l.mood)
 
-          marker.getElement().addEventListener("click", () => {
-            map.current.flyTo({
-              center: [l.coords.lng, l.coords.lat],
-              zoom: 12,
-              speed: 2.2,
-              curve: 1.5,
-              easing: (t) => t
-            });
+            const el = document.createElement("div")
+            el.style.backgroundImage = `url(${iconUrl})`
+            el.style.backgroundSize = "contain"
+            el.style.width = "32px"
+            el.style.height = "32px"
+            el.style.cursor = "pointer"
+
+            const marker = new maptilersdk.Marker({ element: el })
+            .setLngLat([l.coords.lng, l.coords.lat])
+            .addTo(map.current)
+
+            el.addEventListener("click", () => {
+                map.current.flyTo({
+                    center: [l.coords.lng, l.coords.lat],
+                    zoom: 6,
+                    speed: 1.2,
+                    curve: 1.5,
+                    easing: (t) => t
+                })
           
-            setSelectedLetter(l);
-          });
-      });
+                setSelectedLetter(l);
+            });
+        });
   }, [letters, setSelectedLetter]);
 
   return (

@@ -8,9 +8,9 @@ export default function LetterForm({ onSubmit }) {
 
   const [form, setForm] = useState({
     name: "",
+    mood: "",
     location: "",
-    content: "",
-    coords: null
+    content: ""
   })
 
   useEffect(() => {
@@ -33,8 +33,7 @@ export default function LetterForm({ onSubmit }) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords
-          setForm((prev) => ({ ...prev, coords: { lat: latitude, lng: longitude } }))
-        fetchCity(latitude, longitude)
+          fetchCity(latitude, longitude)
         },
         (error) => {
           console.warn("Geolocation permission denied:", error.message)
@@ -54,54 +53,31 @@ export default function LetterForm({ onSubmit }) {
   }
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (!form.name || !form.content) {
-      alert("Please fill in all fields.");
-      return;
+    if (!form.name || !form.mood || !form.content) {
+      alert("Please fill in all fields.")
+      return
+    }
+
+    if (!form.location) {
+      alert("Still detecting your location. Please wait a second.")
+      return
     }
 
     if (form.content.length > MAX_LENGTH) {
-      alert(`Your letter is too long. Please stay under ${MAX_LENGTH} characters.`);
-      return;
+      alert(`Your letter is too long. Please stay under ${MAX_LENGTH} characters.`)
+      return
     }
 
     if (hasProfanity(form.name) || hasProfanity(form.content)) {
-      alert("Please keep your message respectful 🌸");
-      return;
+      alert("Please keep your message respectful 🌸")
+      return
     }
 
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-
-          const updatedForm = {
-            ...form,
-            coords: { lat: latitude, lng: longitude },
-            timestamp: new Date(),
-          };
-
-          // Call the onSubmit function with the updated form data
-          onSubmit(updatedForm);
-
-          // Reset the form
-          setForm({
-            name: "",
-            location: form.location,
-            content: "",
-            coords: { lat: latitude, lng: longitude },
-          });
-        },
-        (error) => {
-          console.warn("Geolocation permission denied:", error.message);
-          alert("Unable to fetch your location. Please enable location services.");
-        }
-      );
-    } else {
-      alert("Geolocation is not supported by your browser.");
-    }
-  };
+    onSubmit(form)
+    setForm({ name: "", mood: "", location: form.location, content: "" })
+  }
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow space-y-4">
@@ -114,23 +90,22 @@ export default function LetterForm({ onSubmit }) {
         onChange={handleChange}
       />
 
-      <div className="flex gap-2">
-        <input
-          type="text"
-          name="location"
-          placeholder="Detecting location..."
-          className="flex-1 p-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed focus:outline-none placeholder-gray-400 text-gray-900"
-          value={form.location}
-          readOnly
-        />
-        <button
-          type="button"
-          onClick={() => alert("Coming soon: map picker!")}
-          className="px-3 py-2 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 whitespace-nowrap"
-        >
-          Choose on Map
-        </button>
-      </div>
+<select
+  name="mood"
+  value={form.mood}
+  onChange={handleChange}
+  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300 text-gray-900 bg-white"
+>
+  <option value="">How do you feel? ☁️</option>
+  <option value="☀️ Happy">☀️ Feeling joyful</option>
+  <option value="🌧 Sad">🌧 Feeling sad</option>
+  <option value="⛈️ Angry">⛈️ Feeling angry</option>
+  <option value="🌥 Reflective">🌥 Feeling thoughtful</option>
+  <option value="🌈 Hopeful">🌈 Feeling loving / hopeful</option>
+</select>
+
+      {/* Hidden location field (used internally) */}
+      <input type="hidden" name="location" value={form.location} />
 
       <textarea
         name="content"

@@ -31,11 +31,38 @@ export default function App() {
 
   // Handle form submission and save to Firestore
   const handleSubmit = async (newLetter) => {
-    const docRef = await addDoc(collection(db, "letters"), {
-      ...newLetter,
-      timestamp: new Date(),
-    });
-    setLetters([{ id: docRef.id, ...newLetter }, ...letters]);
+    try {
+      // Get user’s location
+      const pos = await new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject)
+      );
+      const { latitude, longitude } = pos.coords;
+  
+      // Do reverse geocoding for location name
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+      );
+      const data = await res.json();
+      const locationName =
+        data.address.city || data.address.town || data.address.village || data.address.county || "Unknown";
+  
+      // Add coords and location to letter before storing
+      const enrichedLetter = {
+        ...newLetter,
+        location: locationName,
+        coords: {
+          lat: latitude,
+          lng: longitude
+        },
+        timestamp: new Date()
+      };
+  
+      const docRef = await addDoc(collection(db, "letters"), enrichedLetter);
+      setLetters([{ id: docRef.id, ...enrichedLetter }, ...letters]);
+    } catch (err) {
+      console.error("Geolocation or save failed:", err);
+      alert("We couldn't detect your location. Please allow location access.");
+    }
   };
 
   return (
