@@ -9,7 +9,8 @@ export default function LetterForm({ onSubmit }) {
   const [form, setForm] = useState({
     name: "",
     location: "",
-    content: ""
+    content: "",
+    coords: null
   })
 
   useEffect(() => {
@@ -32,7 +33,8 @@ export default function LetterForm({ onSubmit }) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords
-          fetchCity(latitude, longitude)
+          setForm((prev) => ({ ...prev, coords: { lat: latitude, lng: longitude } }))
+        fetchCity(latitude, longitude)
         },
         (error) => {
           console.warn("Geolocation permission denied:", error.message)
@@ -52,31 +54,54 @@ export default function LetterForm({ onSubmit }) {
   }
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!form.name || !form.content) {
-      alert("Please fill in all fields.")
-      return
-    }
-
-    if (!form.location) {
-      alert("Still detecting your location. Please wait a second.")
-      return
+      alert("Please fill in all fields.");
+      return;
     }
 
     if (form.content.length > MAX_LENGTH) {
-      alert(`Your letter is too long. Please stay under ${MAX_LENGTH} characters.`)
-      return
+      alert(`Your letter is too long. Please stay under ${MAX_LENGTH} characters.`);
+      return;
     }
 
     if (hasProfanity(form.name) || hasProfanity(form.content)) {
-      alert("Please keep your message respectful 🌸")
-      return
+      alert("Please keep your message respectful 🌸");
+      return;
     }
 
-    onSubmit(form)
-    setForm({ name: "", location: form.location, content: "" }) // keep the location
-  }
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          const updatedForm = {
+            ...form,
+            coords: { lat: latitude, lng: longitude },
+            timestamp: new Date(),
+          };
+
+          // Call the onSubmit function with the updated form data
+          onSubmit(updatedForm);
+
+          // Reset the form
+          setForm({
+            name: "",
+            location: form.location,
+            content: "",
+            coords: { lat: latitude, lng: longitude },
+          });
+        },
+        (error) => {
+          console.warn("Geolocation permission denied:", error.message);
+          alert("Unable to fetch your location. Please enable location services.");
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow space-y-4">
