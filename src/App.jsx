@@ -97,6 +97,35 @@ export default function App() {
       </motion.div>
     </motion.div>
   )}
+
+  {/* Modal for Selected Letter */}
+  {selectedLetter && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    >
+      <motion.div
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 40, opacity: 0 }}
+        transition={{ type: "spring", bounce: 0.25, duration: 0.4 }}
+        className="bg-white p-6 rounded-xl shadow-lg w-full max-w-xl relative"
+      >
+        <button
+          onClick={() => setSelectedLetter(null)}
+          className="absolute top-2 right-2 text-gray-500 hover:text-black text-xl"
+        >
+          &times;
+        </button>
+        <h2 className="text-xl font-bold text-purple-700 mb-4">
+          {selectedLetter.name} from {selectedLetter.location}
+        </h2>
+        <p className="text-gray-700 italic mb-4">"{selectedLetter.content}"</p>
+      </motion.div>
+    </motion.div>
+  )}
 </AnimatePresence>
     </div>
   );
