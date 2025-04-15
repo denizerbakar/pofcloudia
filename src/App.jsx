@@ -3,22 +3,24 @@ import LetterForm from "./LetterForm";
 import LetterFeed from "./LetterFeed";
 import { db } from "./firebase";
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function App() {
   const [letters, setLetters] = useState([]);
+  const [showModal, setShowModal] = useState(false);
 
   // Fetch letters from Firestore on component mount
   useEffect(() => {
     const fetchLetters = async () => {
       const q = query(collection(db, "letters"), orderBy("timestamp", "desc"));
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        const fetched = snapshot.docs.map(doc => ({
+        const fetched = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        }))
-        setLetters(fetched)
-      })
-      return () => unsubscribe()
+        }));
+        setLetters(fetched);
+      });
+      return () => unsubscribe();
     };
 
     fetchLetters();
@@ -46,7 +48,48 @@ export default function App() {
         </h1>
 
         <div className="w-full space-y-6">
-          <LetterForm onSubmit={handleSubmit} />
+          {/* Button to open the modal */}
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-purple-600 text-white px-6 py-3 rounded hover:bg-purple-700 mx-auto block"
+          >
+            ✍️ Write a Letter
+          </button>
+
+          {/* Modal with animation */}
+          <AnimatePresence>
+            {showModal && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+              >
+                <motion.div
+                  initial={{ y: 40, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 40, opacity: 0 }}
+                  transition={{ type: "spring", bounce: 0.25, duration: 0.4 }}
+                  className="bg-white p-6 rounded-xl shadow-lg w-full max-w-xl relative"
+                >
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="absolute top-2 right-2 text-gray-500 hover:text-black text-xl"
+                  >
+                    &times;
+                  </button>
+                  <LetterForm
+                    onSubmit={(data) => {
+                      handleSubmit(data);
+                      setShowModal(false);
+                    }}
+                  />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Letter Feed */}
           <LetterFeed letters={letters} />
         </div>
       </div>
