@@ -68,11 +68,11 @@ export default function Map({ letters = [], setSelectedLetter }) {
                     speed: 1.2,
                     curve: 1.5,
                     easing: (t) => t
-                })
+           })
           
-                setSelectedLetter(l);
-            });
-        });
+            setSelectedLetter(l);
+          });
+      });
   }, [letters, setSelectedLetter]);
 
   return (
